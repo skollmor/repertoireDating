@@ -27,11 +27,10 @@ This code makes use of the following Matlab toolboxes (the toolboxes need to be 
 - macOS Mojave (Version 10.14.6) using Matlab 2019b
 - Linux Ubuntu 16.04 LTS using Matlab 2018b
 
-# Citation
-Please cite the paper mentioned above if you use this code.
- 
 # Notes
 The folder +repertoireDating must be accesible on the Matlab path for the code to work. That means that the *parent*-folder of +repertoireDating must be added to the path or must be the current working directory.
+
+Please cite the paper mentioned above if you use this code.
 
 This code is licensed via the GNU AFFERO GENERAL PUBLIC LICENSE (see included file LICENSE).
 

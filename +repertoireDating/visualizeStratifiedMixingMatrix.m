@@ -61,7 +61,7 @@ function [] = visualizeStratifiedMixingMatrix(avgStratMM, stratMM, varargin)
     % GNU Affero General Public License for more details.
     %
     % You should have received a copy of the GNU Affero General Public License
-    % along with this program (see LICENSE.md file).  If not, see <https://www.gnu.org/licenses/>.
+    % along with this program (see LICENSE file).  If not, see <https://www.gnu.org/licenses/>.
     %
     % Repertoire-Dating on Github: <a href="matlab:web('https://github.com/skollmor/repertoireDating', '-browser')">https://github.com/skollmor/repertoireDating</a>
     % Dataspace on Github: <a href="matlab:web('https://github.com/skollmor/dspace', '-browser')">https://github.com/skollmor/dspace</a>
@@ -139,6 +139,11 @@ function [] = visualizeStratifiedMixingMatrix(avgStratMM, stratMM, varargin)
         Ystrata = cell2mat(arrayfun(@(i) nanmean(Y(strata==i, :), 1), (1:nStrata)', 'uni', false));
         [pcs, ~, ~] = pca(Ystrata);
         slow1 = pcs(:, 1); % pcs are ordered by variance
+        
+        if Ystrata(nStrata, :) * slow1 < Ystrata(1, :) * slow1
+            slow1 = -slow1;
+        end
+        
         slow2 = pcs(:, 2);
         % 'Within day'
         YsubEpochs = cell2mat(arrayfun(@(i) nanmean(Y(subEpochs==i, :), 1), (1:nSubEpochs)', 'uni', false));

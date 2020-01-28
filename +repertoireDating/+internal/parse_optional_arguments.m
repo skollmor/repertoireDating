@@ -22,7 +22,7 @@ function S = parse_optional_arguments(args, argNames, argDefaults, identifier)
     % GNU Affero General Public License for more details.
     %
     % You should have received a copy of the GNU Affero General Public License
-    % along with this program (see LICENSE.md file).  If not, see <https://www.gnu.org/licenses/>.
+    % along with this program (see LICENSE file).  If not, see <https://www.gnu.org/licenses/>.
     %
     % Repertoire-Dating on Github: <a href="matlab:web('https://github.com/skollmor/repertoireDating', '-browser')">https://github.com/skollmor/repertoireDating</a>
     % Dataspace on Github: <a href="matlab:web('https://github.com/skollmor/dspace', '-browser')">https://github.com/skollmor/dspace</a>

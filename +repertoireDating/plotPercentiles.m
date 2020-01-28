@@ -4,21 +4,21 @@ function [avg_nDays, shift, span] = plotPercentiles(prctPerDay_avg, epochs, subE
     %
     % Inputs
     % ------
-    % prctPerDay_avg: numel(prct) X numel(epochs) X numel(subEpochs) 
+    % prctPerDay_avg: numel(prct) X numel(epochs) X numel(subEpochs)
     %
     % subEpochs: 1..nDivisions/epoch
     %
     % epochs: [e_0, e_0+1, ..., e_max]
-    % 
+    %
     % epochs_forAvg: subset of epochs
-    % 
+    %
     % Optional Inputs
     % ---------------
     % These inputs can be omitted or provided as name, value pairs.
     % 
     %
     % nEpochs_in_avg: how many consecutive epochs to average (default: 2)
-    % 
+    %
     % percentiles: e.g. [5, 25, 50, 75, 95]
     %
     % Example
@@ -69,17 +69,17 @@ function [avg_nDays, shift, span] = plotPercentiles(prctPerDay_avg, epochs, subE
     % GNU Affero General Public License for more details.
     %
     % You should have received a copy of the GNU Affero General Public License
-    % along with this program (see LICENSE.md file).  If not, see <https://www.gnu.org/licenses/>.
+    % along with this program (see LICENSE file).  If not, see <https://www.gnu.org/licenses/>.
     %
     % Repertoire-Dating on Github: <a href="matlab:web('https://github.com/skollmor/repertoireDating', '-browser')">https://github.com/skollmor/repertoireDating</a>
     % Dataspace on Github: <a href="matlab:web('https://github.com/skollmor/dspace', '-browser')">https://github.com/skollmor/dspace</a>
 
-
+    
     S = repertoireDating.internal.parse_optional_arguments(varargin,...
-        {'nEpochs_in_avg' 'percentiles'},...
-        {2, [5, 25, 50, 75, 95]},...
+        {'nEpochs_in_avg' 'percentiles', 'doPlot'},...
+        {2, [5, 25, 50, 75, 95], true},...
         'repertoireDating.plotPercentiles');
-      
+    
     % Make sure subEpochs and epochs are row vectors
     if numel(subEpochs) ~= size(subEpochs, 2)
         subEpochs = reshape(subEpochs, 1, []);
@@ -88,35 +88,38 @@ function [avg_nDays, shift, span] = plotPercentiles(prctPerDay_avg, epochs, subE
         epochs = reshape(epochs, 1, []);
     end
     
-    % Plot repertoire dating percentiles
-    pfcn = repertoireDating.internal.bda_figure('', [5, 5], 1);
-    pfcn(1, 1, '', 4, 5); hold all;
-    for u = epochs
-        for s = subEpochs   
-            for kk = 1:numel(S.percentiles)
-                if S.percentiles(kk) == 50
-                    color = [1,0,0];
-                else
-                    color = [0,0,0];
-                end
-                line(0.1 + 0.8*([s, s+1]-1)/max(subEpochs)+u,...
-                    [1, 1] * (prctPerDay_avg(kk, epochs == u, subEpochs == s)), 'color', color);
-                if find(s == subEpochs) < numel(subEpochs)
-                    line(0.1 + [0.8, 0.8] * (s)/max(subEpochs)+u,...
-                        [(prctPerDay_avg(kk, epochs == u, find(subEpochs == s))),...
-                        (prctPerDay_avg(kk, epochs == u, find(subEpochs == s)+1))], 'color', color); %#ok<FNDSB>
+    if S.doPlot
+        % Plot repertoire dating percentiles
+        pfcn = repertoireDating.internal.bda_figure('', [5, 5], 1);
+        pfcn(1, 1, '', 4, 5); hold all;
+        for u = epochs
+            for s = subEpochs
+                for kk = 1:numel(S.percentiles)
+                    if S.percentiles(kk) == 50
+                        color = [1,0,0];
+                    else
+                        color = [0,0,0];
+                    end
+                    line(0.1 + 0.8*([s, s+1]-1)/max(subEpochs)+u,...
+                        [1, 1] * (prctPerDay_avg(kk, epochs == u, subEpochs == s)), 'color', color);
+                    if find(s == subEpochs) < numel(subEpochs)
+                        line(0.1 + [0.8, 0.8] * (s)/max(subEpochs)+u,...
+                            [(prctPerDay_avg(kk, epochs == u, find(subEpochs == s))),...
+                            (prctPerDay_avg(kk, epochs == u, find(subEpochs == s)+1))], 'color', color); %#ok<FNDSB>
+                    end
                 end
             end
         end
+        xlim([min(epochs), max(epochs)+1]);
+        ylim([min(epochs), max(epochs)+1]);
+        xlabel('production time (epochs)');
+        ylabel('repertoire time (epochs)');
+        set(gca, 'DataAspectRatio', [1 1 1]);
+        
+        %% Compute Averages
+        pfcn(5, 1, '', 1, 4);
+        
     end
-    xlim([min(epochs), max(epochs)+1]);
-    ylim([min(epochs), max(epochs)+1]);
-    xlabel('production time (epochs)');
-    ylabel('repertoire time (epochs)');
-    set(gca, 'DataAspectRatio', [1 1 1]);
-    
-    %% Compute Averages
-    pfcn(5, 1, '', 1, 4);
     
     % cut out desired stage levels
     prctPerDay_avg_cutout = prctPerDay_avg(:, ismember(epochs, epochs_forAvg), :);
@@ -138,7 +141,7 @@ function [avg_nDays, shift, span] = plotPercentiles(prctPerDay_avg, epochs, subE
         avg_nDays{jj} = avg_nDays{jj}/(size(prctPerDay_avg_cutout, 2) - S.nEpochs_in_avg + 1);
         
         % compute medians for each averaged stage
-        if ismember(50, S.percentiles) 
+        if ismember(50, S.percentiles)
             % take median over 50th percentile
             med(jj) = median(avg_nDays{jj}(S.percentiles == 50, :));
         else
@@ -152,52 +155,63 @@ function [avg_nDays, shift, span] = plotPercentiles(prctPerDay_avg, epochs, subE
         avg_nDays{jj} = avg_nDays{jj} - mean(med);
     end
     
-    fprintf('Epochs in average: %i\n', size(prctPerDay_avg_cutout, 2));
-    for u = 0:(S.nEpochs_in_avg-1)
-        for s = subEpochs
-            for kk = 1:numel(S.percentiles)
-                if S.percentiles(kk) == 50
-                    color = [1,0,0];
-                else
-                    color = [0,0,0];
-                end
-                
-                line(0.1 + 0.8*([s, s+1]-1)/max(subEpochs) + u,...
-                    [1, 1] * avg_nDays{u+1}(kk, subEpochs == s), 'color', color);
-                
-                if find(s == subEpochs) < numel(subEpochs)
-                    line(0.1 + [0.8, 0.8] * (s)/max(subEpochs) + u,...
-                        [avg_nDays{u+1}(kk, subEpochs == s),
-                        avg_nDays{u+1}(kk, find(subEpochs == s)+1)], 'color', color);
+    if S.doPlot
+        
+        fprintf('Epochs in average: %i\n', size(prctPerDay_avg_cutout, 2));
+        for u = 0:(S.nEpochs_in_avg-1)
+            for s = subEpochs
+                for kk = 1:numel(S.percentiles)
+                    if S.percentiles(kk) == 50
+                        color = [1,0,0];
+                    else
+                        color = [0,0,0];
+                    end
+                    
+                    line(0.1 + 0.8*([s, s+1]-1)/max(subEpochs) + u,...
+                        [1, 1] * avg_nDays{u+1}(kk, subEpochs == s), 'color', color);
+                    
+                    if find(s == subEpochs) < numel(subEpochs)
+                        line(0.1 + [0.8, 0.8] * (s)/max(subEpochs) + u,...
+                            [avg_nDays{u+1}(kk, subEpochs == s),
+                            avg_nDays{u+1}(kk, find(subEpochs == s)+1)], 'color', color);
+                    end
                 end
             end
         end
+        
+        xlabel('production time (k, k+1)');
+        ylabel('avg. repertoire time (mean subtracted)');
+        %set(gcf, 'position', [14          69        1329        1035]);
+        
+        
+        pfcn(5, 5, 'c');
+        
     end
     
-    xlabel('production time (k, k+1)');
-    ylabel('avg. repertoire time (mean subtracted)');
-    %set(gcf, 'position', [14          69        1329        1035]);
-    
-    
-    pfcn(5, 5, 'c');
-    if ismember(50, S.percentiles) 
+    if ismember(50, S.percentiles)
         ppi = find(S.percentiles == 50);
     else
         ppi = S.percentiles(floor(end/2));
     end
+    
+    
     
     % span is defined as (day1, late) - (day1, early)
     span = avg_nDays{1}(ppi, end) - avg_nDays{1}(ppi, 1);
     % shift is defined as (day2, early) - (day1, late)
     shift = avg_nDays{2}(ppi, 1) - avg_nDays{1}(ppi, end);
     
-    plot(shift, span, 'xk');
-    xlabel(sprintf('shift (Pct: %.0f)', S.percentiles(ppi)));
-    ylabel('span');
-    mx = max(abs(shift), 2);
-    my = max(abs(span), 2);
-    xlim([-mx, mx]);
-    ylim([-my, my]);
-    repertoireDating.internal.bda_formatFigure(gcf, 1.5);  
+    if S.doPlot
+        
+        plot(shift, span, 'xk');
+        xlabel(sprintf('shift (Pct: %.0f)', S.percentiles(ppi)));
+        ylabel('span');
+        mx = max(abs(shift), 2);
+        my = max(abs(span), 2);
+        xlim([-mx, mx]);
+        ylim([-my, my]);
+        repertoireDating.internal.bda_formatFigure(gcf, 1.5);
+        
+    end
 end
 

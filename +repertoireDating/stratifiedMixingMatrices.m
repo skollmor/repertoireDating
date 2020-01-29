@@ -4,37 +4,46 @@ function stratMM = stratifiedMixingMatrices(data, epochs, subEpochs, repertoireT
     %
     % Inputs
     % ------ 
-    % NNids: N x #Neighbours (integer)
-    % - defines the k-NN graph
-    % - entires of this matrix of indices must be in 1..N (N is the total number of datapoints)
-    % - row j in this matrix contains the indices of the k nearest neighbours of datapoint j.
-    % - points should not be their own neighbors
+    % data: N x D
+    % - data matrix (rows are datapoints of dimension D)
+    % - note: no dimensionality reduction is performed in this function (k-NN graphs
+    %   are computed directly on the D dimensional data)
     %
-    % labels: N x 1 
-    % - defines the labels mixing statistics are based on
-    % - unique values are used as bins, no other binning takes place
+    % epochs: N x 1 
     % 
+    % subEpochs: N x 1
+    %
+    % repertoireTimes: N x 1
+    %
     % Optional Inputs
     % ---------------
     % These inputs can be omitted or provided as name, value pairs.
     % 
     % nStrata: (default: 5)
-    % doPlot: logical
-    % doMDS: logical
+    % valid: N x 1, logical, (default: true(N, 1))
+    % uEpochs: vector of unique epochs to consider
+    % uSubEpochs: vector of unique sub-epochs to consider
+    % nConsecutiveEpochs: 1 x 1, integer (default: 2)
     %
     % Output
     % -------
     % stratMM.allMMs                              Cell array that contains the outputs of 
     %                                             repertoireDating.mixingMatrix for each stratMM
     % stratMM.allMMs{j}.NH 
-    % stratMM.allMMs{j}.counts                    Nn x Nq, Pooled neighbourhood labels
-    % stratMM.allMMs{j}.countRatio                Nn x Nq, counts./NH
-    % stratMM.allMMs{j}.log2CountRatio            Nn x Nq, log2(counts./NH)
-    % stratMM.allMMs{j}.levels                    1 x Nq, Values corresponding to MM columns
+    % stratMM.allMMs{j}.counts                    Nn x Nn, Pooled neighbourhood labels
+    % stratMM.allMMs{j}.countRatio                Nn x Nn, counts./NH
+    % stratMM.allMMs{j}.log2CountRatio            Nn x Nn, log2(counts./NH)
+    % stratMM.allMMs{j}.levels                    1 x Nn, Values corresponding to MM columns
     % stratMM.allMMs{j}.neighbourhoodLevels       1 x Nn, Values corresponding to MM rows
     % stratMM.allMMs{j}.levelSizes
     % stratMM.allMMs{j}.kNeighbours               1 x 1, Number of nearest neighbours
     % stratMM.allMMs{j}.epochs                    Epochs used for this strat-MM
+    %
+    % stratMM.levels: vector of the form 1:Ns
+    % stratMM.strata                              assigns meaning to the rows and columns 
+    %                                             of the MMs
+    % stratMM.epochs                              -"- 
+    % stratMM.subEpochs                           -"-
     %
     % Example
     % -------
@@ -69,9 +78,9 @@ function stratMM = stratifiedMixingMatrices(data, epochs, subEpochs, repertoireT
     % Copyright (C) 2020 University Zurich, Sepp Kollmorgen
     % 
     % Reference (please cite):
-    % Nearest neighbours reveal fast and slow components of motor learning.
-    % Kollmorgen, S., Hahnloser, R.H.R.; Mante, V.
-    % Nature (2020) doi:10.1038/s41586-019-1892-x
+    % Kollmorgen, S., Hahnloser, R.H.R. & Mante, V. Nearest neighbours reveal
+    % fast and slow components of motor learning. Nature 577, 526-530 (2020).
+    % https://doi.org/10.1038/s41586-019-1892-x
     % 
     % This program is free software: you can redistribute it and/or modify
     % it under the terms of the GNU Affero General Public License as published by

@@ -11,8 +11,10 @@ function RP = renditionPercentiles(NNids, epochs, varargin)
     % NNids: N x #Neighbours (integer)
     % - defines the k-NN graph
     % - entires of this matrix of indices must be in 1..N (N is the total number of datapoints)
-    % - row j in this matrix contains the indices of the k nearest neighbours of datapoint j.
+    % - row j in this matrix contains the indices of the k nearest neighbours of datapoint j
     % - points should not be their own neighbors
+    % - this input can have different dimension if an optional input 'valid' is specified
+    % - (see below)
     % 
     % epochs:  N x 1 (double, e.g. day, ideally without gaps)
     % 
@@ -28,6 +30,9 @@ function RP = renditionPercentiles(NNids, epochs, varargin)
     % - this does not restrict the neighbours of querry points but only the set of
     %   querry points itself
     % - can be empty (which is interpreted as true(N, 1))
+    % - if sum(valid) < N and size(NNids, 1) == sum(valid), then the jth row of NNids
+    %   contains the neighbours of datapoint valid_ids(j), where valid_ids = find(valid)
+    %   Note: in that case, the entries of NNids are still interpreted as referring to 1..N
     %
     % doPlot: logical
     % - if true, rendition percentiles are plotted.
@@ -36,6 +41,7 @@ function RP = renditionPercentiles(NNids, epochs, varargin)
     % -------
     % RPD: numel(prct) x sum(valid)
     % - the repertoire dating percentiles for each rendition
+    % - if no 'valid' parameter was provided: sum(valid) = N
     %
     % Example
     % -------
@@ -70,9 +76,9 @@ function RP = renditionPercentiles(NNids, epochs, varargin)
     % Copyright (C) 2020 University Zurich, Sepp Kollmorgen
     % 
     % Reference (please cite):
-    % Nearest neighbours reveal fast and slow components of motor learning.
-    % Kollmorgen, S., Hahnloser, R.H.R.; Mante, V.
-    % Nature (2020) doi:10.1038/s41586-019-1892-x
+    % Kollmorgen, S., Hahnloser, R.H.R. & Mante, V. Nearest neighbours reveal
+    % fast and slow components of motor learning. Nature 577, 526-530 (2020).
+    % https://doi.org/10.1038/s41586-019-1892-x
     % 
     % This program is free software: you can redistribute it and/or modify
     % it under the terms of the GNU Affero General Public License as published by
@@ -102,7 +108,13 @@ function RP = renditionPercentiles(NNids, epochs, varargin)
        
     %% Compute percentiles
     % Obtain neighborhood labels for each valid rendition
-    nhLabels = epochs(NNids(S.valid, :));
+    if sum(S.valid) == size(NNids, 1)
+        nhLabels = epochs(NNids);
+    else
+        assert(size(NNids, 1) == numel(epochs));
+        nhLabels = epochs(NNids(S.valid, :));
+    end
+    
     RP = prctile(nhLabels, S.percentiles, 2);
        
     %% Plot percentiles

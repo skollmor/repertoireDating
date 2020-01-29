@@ -6,8 +6,10 @@ function [RPD, uEpochs, uSubEpochs] = percentiles(NNids, epochs, subEpochs, vara
     % NNids: N x #Neighbours (integer)
     % - defines the k-NN graph
     % - entires of this matrix of indices must be in 1..N (N is the total number of datapoints)
-    % - row j in this matrix contains the indices of the k nearest neighbours of datapoint j.
+    % - row j in this matrix contains the indices of the k nearest neighbours of datapoint j
     % - points should not be their own neighbors
+    % - this input can have different dimension if an optional input 'valid' is specified
+    % - (see below)
     %
     % epochs: N x 1 (double, e.g. day)
     %
@@ -33,7 +35,14 @@ function [RPD, uEpochs, uSubEpochs] = percentiles(NNids, epochs, subEpochs, vara
     % - provide if a fixed set of epochs is to be used (even if
     %   some do not occur in the dataset)
     %
-    % #DEFINE-valid
+    % valid: N x 1 (logical)
+    % - marks all datapoints used as querry points for the k-NN based analysis
+    % - this does not restrict the neighbours of querry points but only the set of
+    %   querry points itself
+    % - can be empty (which is interpreted as true(N, 1))
+    % - if sum(valid) < N and size(NNids, 1) == sum(valid), then the jth row of NNids
+    %   contains the neighbours of datapoint valid_ids(j), where valid_ids = find(valid)
+    %   Note: in that case, the entries of NNids are still interpreted as referring to 1..N
     %
     % Outputs
     % -------
@@ -79,9 +88,9 @@ function [RPD, uEpochs, uSubEpochs] = percentiles(NNids, epochs, subEpochs, vara
     % Copyright (C) 2020 University Zurich, Sepp Kollmorgen
     % 
     % Reference (please cite):
-    % Nearest neighbours reveal fast and slow components of motor learning.
-    % Kollmorgen, S., Hahnloser, R.H.R.; Mante, V.
-    % Nature (2020) doi:10.1038/s41586-019-1892-x
+    % Kollmorgen, S., Hahnloser, R.H.R. & Mante, V. Nearest neighbours reveal
+    % fast and slow components of motor learning. Nature 577, 526-530 (2020).
+    % https://doi.org/10.1038/s41586-019-1892-x
     % 
     % This program is free software: you can redistribute it and/or modify
     % it under the terms of the GNU Affero General Public License as published by
@@ -127,7 +136,16 @@ function [RPD, uEpochs, uSubEpochs] = percentiles(NNids, epochs, subEpochs, vara
     if isempty(S.uSubEpochs)
         S.uSubEpochs = unique(subEpochs(S.valid));
     end
-    nDatapoints = size(NNids, 1);
+    
+    nDatapoints = numel(S.valid);
+    
+    if sum(S.valid) < nDatapoints && sum(S.valid) == size(NNids, 1)
+        % In this case, NNids(j, :) gives nieghbours of datapoint validIds(j)
+        validIds = find(S.valid); 
+    else
+        validIds = [];
+    end
+       
     assert(ismember(S.style, {'mode a', 'mean based'}));
     assert(size(epochs, 1) == nDatapoints);
     assert(size(subEpochs, 1) == nDatapoints);
@@ -144,9 +162,18 @@ function [RPD, uEpochs, uSubEpochs] = percentiles(NNids, epochs, subEpochs, vara
             if sum(valid_subEpoch) == 0
                 continue;
             end
-            % assemble the epochs (production times) for all neighbors of points 
-            % within the current (querry) epoch and subEpoch
-            nnEpochs = epochs(NNids(valid_subEpoch, :));       
+            
+            % assemble the epochs (production times) for all neighbors of points
+            % within the current (querry) epoch and subEpoch    
+            if ~isempty(validIds)
+                % In this case, NNids(j, :) gives nieghbours of datapoint validIds(j)
+                valid_subEpoch_nested = epochs(validIds) == S.uEpochs(epochId) ...
+                    & subEpochs(validIds) == S.uSubEpochs(subEpochId);
+                nnEpochs = epochs(NNids(valid_subEpoch_nested, :));
+            else
+                nnEpochs = epochs(NNids(valid_subEpoch, :));
+            end
+            
             switch S.style
                 case 'mode a'
                     RPD(:, epochId, subEpochId) = prctile(nnEpochs(:), S.percentiles);

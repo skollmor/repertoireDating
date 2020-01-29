@@ -7,8 +7,10 @@ function MM = mixingMatrix(NNids, labels, varargin)
     % NNids: N x #Neighbours (integer)
     % - defines the k-NN graph
     % - entires of this matrix of indices must be in 1..N (N is the total number of datapoints)
-    % - row j in this matrix contains the indices of the k nearest neighbours of datapoint j.
+    % - row j in this matrix contains the indices of the k nearest neighbours of datapoint j
     % - points should not be their own neighbors
+    % - this input can have different dimension if an optional input 'valid' is specified
+    % - (see below)
     %
     % labels: N x 1 
     % - defines the labels mixing statistics are based on
@@ -18,6 +20,16 @@ function MM = mixingMatrix(NNids, labels, varargin)
     % ---------------
     % These inputs can be omitted or provided as name, value pairs.
     % 
+    %
+    % valid: N x 1 (logical)
+    % - marks all datapoints used as querry points for the k-NN based analysis
+    % - this does not restrict the neighbours of querry points but only the set of
+    %   querry points itself
+    % - can be empty (which is interpreted as true(N, 1))
+    % - if sum(valid) < N and size(NNids, 1) == sum(valid), then the jth row of NNids
+    %   contains the neighbours of datapoint valid_ids(j), where valid_ids = find(valid)
+    %   Note: in that case, the entries of NNids are still interpreted as referring to 1..N
+    %
     %   --Fixed Unique Labels--
     %   Sometimes certain labels do not occur in the data but it it convenient to
     %   still include them in the mixing matrix. For these cases, the levels of the 
@@ -78,9 +90,9 @@ function MM = mixingMatrix(NNids, labels, varargin)
     % Copyright (C) 2020 University Zurich, Sepp Kollmorgen
     % 
     % Reference (please cite):
-    % Nearest neighbours reveal fast and slow components of motor learning.
-    % Kollmorgen, S., Hahnloser, R.H.R.; Mante, V.
-    % Nature (2020) doi:10.1038/s41586-019-1892-x
+    % Kollmorgen, S., Hahnloser, R.H.R. & Mante, V. Nearest neighbours reveal
+    % fast and slow components of motor learning. Nature 577, 526-530 (2020).
+    % https://doi.org/10.1038/s41586-019-1892-x
     % 
     % This program is free software: you can redistribute it and/or modify
     % it under the terms of the GNU Affero General Public License as published by
@@ -119,7 +131,14 @@ function MM = mixingMatrix(NNids, labels, varargin)
     if isempty(S.neighbourhoodLevels)
         S.neighbourhoodLevels = unique(S.neighbourhoodLabels);
     end
-   
+    
+    if sum(S.valid) < numel(S.valid) && size(NNids, 1) == numel(S.valid)
+        % Some selection is used and a full graph is provided instead of one 
+        % where the jth row gives nbs for valid_ids(j)with valid_ids = find(S.valid)
+        % a partial graph is expected below, so we truncate the graph accordingly
+        NNids = NNids(S.valid, :);
+    end
+    
     LGnans = sum(isnan(NNids), 2);
     if sum(LGnans) > 0
         repertoireDating.internal.fprintf_orange('%i Neighborhoods contain NaN ids. (avg #NaNs: %.2f)\n', sum(LGnans > 0),...
@@ -209,6 +228,7 @@ end
 function [counts, NHcounts, levelSizes, neighbourhoodLevelSizes] =...
         mixingMatrix_outerproductNH(LGids, LGnans, levels, targetBins, levelvar,...
         targetvar, pf, minLevelSize)
+    % LGids is always a partial graph with numel(find(pf)) rows
     
     counts = NaN(numel(targetBins), numel(levels));
     NHcounts = NaN(numel(targetBins), numel(levels));

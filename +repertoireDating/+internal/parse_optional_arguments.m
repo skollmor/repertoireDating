@@ -7,9 +7,9 @@ function S = parse_optional_arguments(args, argNames, argDefaults, identifier)
     % Copyright (C) 2020 University Zurich, Sepp Kollmorgen
     % 
     % Reference (please cite):
-    % Nearest neighbours reveal fast and slow components of motor learning.
-    % Kollmorgen, S., Hahnloser, R.H.R.; Mante, V.
-    % Nature (2020) doi:10.1038/s41586-019-1892-x
+    % Kollmorgen, S., Hahnloser, R.H.R. & Mante, V. Nearest neighbours reveal
+    % fast and slow components of motor learning. Nature 577, 526-530 (2020).
+    % https://doi.org/10.1038/s41586-019-1892-x
     % 
     % This program is free software: you can redistribute it and/or modify
     % it under the terms of the GNU Affero General Public License as published by

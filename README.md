@@ -8,7 +8,7 @@ The repository accompanies the research paper:
 *Kollmorgen, S., Hahnloser, R.H.R. & Mante, V. Nearest neighbours reveal fast and slow components of motor learning. Nature 577, 526–530 (2020). https://doi.org/10.1038/s41586-019-1892-x*.
 
 ### How to Use
-Checkout (or copy) the repertoireDating-repository to your local machine. In Matlab, run the script repertoireDatingExamples.m located in the main repertoireDating-folder:
+Checkout (or copy) the repertoireDating-repository. In Matlab, run the script repertoireDatingExamples.m located in the main repertoireDating-folder:
 
 ```
 repertoireDatingExamples;
